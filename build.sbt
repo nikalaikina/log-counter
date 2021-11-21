@@ -8,6 +8,8 @@ libraryDependencies += "com.github.pureconfig" %% "pureconfig" % "0.17.0"
 
 libraryDependencies += "org.typelevel" %% "cats-effect" % "3.2.9"
 
+libraryDependencies += "co.fs2" %% "fs2-core" % "3.2.0"
+
 val http4sVersion = "0.23.6"
 
 libraryDependencies ++= Seq(
