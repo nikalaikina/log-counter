@@ -5,10 +5,12 @@ import com.github.nikalaikina.coral.config.AppConfig
 import pureconfig.ConfigSource
 import pureconfig.generic.auto._
 import fs2.Stream
+import io.circe.parser._
 
 import java.io.{BufferedReader, InputStream, InputStreamReader}
 
 object Boot extends IOApp {
+  import com.github.nikalaikina.coral.json.LogDecoder._
 
   def input(stream: InputStream): Resource[IO, BufferedReader] = {
     Resource.make(IO.delay(new BufferedReader(new InputStreamReader(stream))))(r =>
@@ -25,7 +27,14 @@ object Boot extends IOApp {
       config <- IO.delay(ConfigSource.default.loadOrThrow[AppConfig])
       process <- IO.delay(Runtime.getRuntime.exec(config.processCommand))
       input <- input(process.getInputStream)
-        .use(i => stream(i).evalMap(s => IO.delay(println(s))).compile.drain)
+        .use(i =>
+          stream(i)
+            .evalMap { s =>
+              IO.delay(println(parse(s).map(logDecoder.decodeJson)))
+            }
+            .compile
+            .drain
+        )
       _ <- IO.delay(println(input))
     } yield ExitCode.Success
   }
