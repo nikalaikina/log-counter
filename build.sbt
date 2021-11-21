@@ -26,3 +26,10 @@ libraryDependencies ++= Seq(
   "io.circe" %% "circe-parser" % circeVersion,
   "io.circe" %% "circe-generic-extras" % circeVersion
 )
+
+val logVersion = "2.1.1"
+
+libraryDependencies ++= Seq(
+  "org.typelevel" %% "log4cats-core" % logVersion,
+  "org.typelevel" %% "log4cats-slf4j" % logVersion
+)
