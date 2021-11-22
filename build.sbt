@@ -34,4 +34,6 @@ libraryDependencies ++= Seq(
   "org.typelevel" %% "log4cats-slf4j" % logVersion
 )
 
+libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.32"
+
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.10" % "test"
