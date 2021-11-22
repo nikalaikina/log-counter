@@ -5,32 +5,54 @@ import com.github.nikalaikina.coral.domain.WordsState.WordCount
 
 import scala.collection.immutable.Queue
 
-case class WordsState(events: Map[EventType, WordCount] = Map.empty) {
-  def addWord(windowSize: Int, eventType: EventType, word: Word): WordsState = {
-    WordsState(
-      events + (eventType -> events.getOrElse(eventType, WordCount()).addWord(windowSize, word))
-    )
+case class WordsState(
+    events: Map[EventType, WordCount] = Map.empty,
+    queue: Queue[(EventType, Word)] = Queue.empty
+) {
+
+  private def get(eventType: EventType): WordCount = {
+    events.getOrElse(eventType, WordCount())
+  }
+
+  def addWord(windowSize: Int, eventType: EventType, newWord: Word): WordsState = {
+    if (queue.size < windowSize) {
+      copy(
+        events = events + (eventType -> get(eventType).addWord(newWord)),
+        queue = queue.enqueue(eventType -> newWord)
+      )
+    } else {
+      val ((typeToDelete, wordToDelete), newQueue) = queue.dequeue
+      val newEvents = {
+        val newType = get(typeToDelete).removeWord(wordToDelete)
+        if (newType.isEmpty) {
+          events - typeToDelete
+        } else {
+          events + (typeToDelete -> newType)
+        }
+      }
+      copy(events = newEvents, queue = newQueue)
+        .addWord(windowSize, eventType, newWord)
+    }
   }
 }
 
 object WordsState {
 
   case class WordCount(
-      map: Map[Word, Int] = Map.empty,
-      queue: Queue[Word] = Queue.empty
+      map: Map[Word, Int] = Map.empty
   ) {
-    def addWord(windowSize: Int, newWord: Word): WordCount = {
-      if (queue.size < windowSize) {
-        copy(
-          map = map |+| Map(newWord -> 1),
-          queue = queue.enqueue(newWord)
-        )
+
+    def isEmpty: Boolean = map.isEmpty
+
+    def addWord(word: Word): WordCount = {
+      copy(map |+| Map(word -> 1))
+    }
+
+    def removeWord(word: Word): WordCount = {
+      if (map.get(word).exists(_ > 1)) {
+        copy(map |+| Map(word -> -1))
       } else {
-        val (wordToDelete, newQueue) = queue.dequeue
-        copy(
-          map = map |+| Map(newWord -> 1, wordToDelete -> -1),
-          queue = newQueue.enqueue(newWord)
-        )
+        copy(map - word)
       }
     }
   }
